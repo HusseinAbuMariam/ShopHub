@@ -11,6 +11,7 @@ import ProductCard from "../components/shared/ProductCard";
 
 import { Link } from "react-router-dom";
 import { categories, products, topSellers, vendors } from "../data/mockData";
+import Checkout from "./Checkout";
 
 export default function Home() {
   return (
@@ -86,6 +87,7 @@ export default function Home() {
       </main>
 
       <Footer />
+      
     </div>
   );
 }

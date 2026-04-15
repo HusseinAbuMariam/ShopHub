@@ -73,7 +73,7 @@ export default function Products() {
             </label>
 
             {/* 💰 Price Filter */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 p-3">
               <input
                 type="number"
                 min="0"

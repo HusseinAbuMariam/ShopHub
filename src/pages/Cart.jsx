@@ -79,10 +79,11 @@ export default function Cart() {
                   <span>{formatCurrency(total)}</span>
                 </div>
               </div>
-
-              <button className="mt-6 w-full rounded-2xl bg-orange-500 px-6 py-3 font-semibold text-white">
-                Proceed to Checkout
-              </button>
+              <Link to="/checkout">
+                <button className="mt-6 w-full rounded-2xl bg-orange-500 px-6 py-3 font-semibold text-white">
+                  Proceed to Checkout
+                </button>
+              </Link>
             </aside>
           </div>
         )}
