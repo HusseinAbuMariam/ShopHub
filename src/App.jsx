@@ -44,8 +44,7 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         {/* VENDORS */}
         <Route path="/vendors" element={<Vendors />} />
-        <Route path="/store" element={<Store />} />
-        <Route path="/store/:id" element={<SellerDetails/>} />
+        <Route path="/store/:id" element={<Store/>} />
         <Route path="/sellers/:id" element={<SellerDetails />} />
         <Route path="/sellers" element={<Sellers />} />
         {/* ORDER SUCCESS */}

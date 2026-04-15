@@ -1,28 +1,85 @@
-import { useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useMemo, useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/layout/Navbar";
 import CategoryBar from "../components/layout/CategoryBar";
 import Footer from "../components/layout/Footer";
 import ProductCard from "../components/shared/ProductCard";
 import SectionTitle from "../components/shared/SectionTitle";
-import { categories, products } from "../data/mockData";
-
+import { categories} from "../data/mockData";
+import { products } from "../data/mockData"; 
 export default function Products() {
   const { search } = useLocation();
+  const navigate = useNavigate();
+
   const params = new URLSearchParams(search);
 
-  const initialCategory = params.get("category") || "all";
-  const initialQuery = params.get("search") || "";
+  const selectedCategoryFromURL = params.get("category") || "all";
+  const queryFromURL = params.get("search") || "";
+  const minFromURL = params.get("min") || "";
+  const maxFromURL = params.get("max") || "";
 
-  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
-  const [query, setQuery] = useState(initialQuery);
+  const [selectedCategory, setSelectedCategory] = useState(selectedCategoryFromURL);
+  const [query, setQuery] = useState(queryFromURL);
+  const [minPrice, setMinPrice] = useState(minFromURL);
+  const [maxPrice, setMaxPrice] = useState(maxFromURL);
 
-  // ✅ Price states
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
+  // Sync state when URL changes (back/forward support)
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+
+    setSelectedCategory(params.get("category") || "all");
+    setQuery(params.get("search") || "");
+    setMinPrice(params.get("min") || "");
+    setMaxPrice(params.get("max") || "");
+  }, [search]);
+    const [productsData, setProductsData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    useEffect(() => {
+  fetch("http://localhost/api/products.php")
+    .then((res) => res.json())
+    .then((data) => {
+      setProductsData(data);
+      setLoading(false);
+    })
+    .catch(() => {
+      console.log("API error → using mock data");
+      setProductsData(products); // fallback
+      setLoading(false);
+    });
+}, []);
+  // Update URL when filters change (with safety check)
+  useEffect(() => {
+    const newParams = new URLSearchParams();
+
+    if (selectedCategory !== "all") {
+      newParams.set("category", selectedCategory);
+    }
+
+    if (query) {
+      newParams.set("search", query);
+    }
+
+    if (minPrice) {
+      newParams.set("min", minPrice);
+    }
+
+    if (maxPrice) {
+      newParams.set("max", maxPrice);
+    }
+
+    const newSearch = newParams.toString();
+    const currentSearch = search.startsWith("?") ? search.slice(1) : search;
+
+    if (newSearch !== currentSearch) {
+      navigate(`/products?${newSearch}`, { replace: true });
+    }
+  }, [selectedCategory, query, minPrice, maxPrice, search, navigate]);
 
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
+        if (loading) {
+      return <div className="p-10 text-center">Loading...</div>;
+    }
+    return productsData.filter((product) => {
       const matchCategory =
         selectedCategory === "all" || product.category === selectedCategory;
 
@@ -33,7 +90,7 @@ export default function Products() {
         product.vendor.toLowerCase().includes(term);
 
       const matchMinPrice =
-        !minPrice || product.price>= Number(minPrice);
+        !minPrice || product.price >= Number(minPrice);
 
       const matchMaxPrice =
         !maxPrice || product.price <= Number(maxPrice);
@@ -59,32 +116,27 @@ export default function Products() {
           <aside className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
             <h3 className="text-lg font-bold">Filters</h3>
 
-            {/* 🔍 Search */}
+            {/* Search */}
             <label className="mt-4 block">
               <span className="mb-2 block text-sm font-semibold text-[var(--muted)]">
                 Search
               </span>
               <input
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search by product or vendor"
                 className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 outline-none"
               />
             </label>
 
-            {/* 💰 Price Filter */}
+            {/* Price */}
             <div className="flex gap-2 p-3">
               <input
                 type="number"
                 min="0"
                 placeholder="Min"
                 value={minPrice}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === "" || Number(value) >= 0) {
-                    setMinPrice(value);
-                  }
-                }}
+                onChange={(e) => setMinPrice(e.target.value)}
                 className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-2 outline-none"
               />
 
@@ -93,17 +145,12 @@ export default function Products() {
                 min="0"
                 placeholder="Max"
                 value={maxPrice}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === "" || Number(value) >= 0) {
-                    setMaxPrice(value);
-                  }
-                }}
+                onChange={(e) => setMaxPrice(e.target.value)}
                 className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-2 outline-none"
               />
             </div>
 
-            {/* 📂 Category */}
+            {/* Category */}
             <div className="mt-6">
               <span className="mb-3 block text-sm font-semibold text-[var(--muted)]">
                 Category
@@ -126,7 +173,7 @@ export default function Products() {
               </div>
             </div>
 
-            {/* 🔄 Reset */}
+            {/* Reset */}
             <button
               onClick={() => {
                 setQuery("");

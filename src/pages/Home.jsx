@@ -8,12 +8,29 @@ import SectionTitle from "../components/shared/SectionTitle";
 import VendorCard from "../components/shared/VendorCard";
 import CategoryCard from "../components/shared/CategoryCard";
 import ProductCard from "../components/shared/ProductCard";
-
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { categories, products, topSellers, vendors } from "../data/mockData";
+
 import Checkout from "./Checkout";
 
 export default function Home() {
+  const [homeData, setHomeData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+  fetch("http://127.0.0.1:8000/api/customer/home")
+    .then((res) => res.json())
+    .then((data) => {
+      setHomeData(data);
+      setLoading(false);
+    })
+    .catch((err) => {
+      console.log("API error", err);
+      setLoading(false);
+    });
+}, []);
+if (loading) {
+  return <div className="p-10 text-center">Loading...</div>;
+}
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition-colors duration-300">
 
