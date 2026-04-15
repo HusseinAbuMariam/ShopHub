@@ -17,28 +17,35 @@ export default function Home() {
   const [homeData, setHomeData] = useState(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
-  fetch("http://127.0.0.1:8000/api/customer/home")
-    .then((res) => res.json())
-    .then((data) => {
-      setHomeData(data);
-      setLoading(false);
-    })
-    .catch((err) => {
-      console.log("API error", err);
-      setLoading(false);
-    });
-}, []);
-if (loading) {
-  return <div className="p-10 text-center">Loading...</div>;
-}
+    fetch("http://127.0.0.1:8000/api/customer/home")
+      .then((res) => res.json())
+      .then((data) => {
+        setHomeData(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.log("API error", err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return <div className="p-10 text-center">Loading...</div>;
+  }
+  if (!homeData) {
+    return <div>No data</div>;
+  }
+
+  // if (homeData) {
+  //   return <pre>{JSON.stringify(homeData)}</pre>;
+  // }
+
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition-colors duration-300">
-
       <Navbar />
       <CategoryBar />
 
       <main className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
-
         {/* HERO */}
         <HeroSection />
         <FeaturesStrip />
@@ -100,11 +107,9 @@ if (loading) {
             ))}
           </div>
         </section>
-
       </main>
 
       <Footer />
-      
     </div>
   );
 }

@@ -17,7 +17,7 @@ import SellerDetails from "./pages/SellerDetails";
 import Sellers from "./pages/Sellers";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
-
+import "./data/api"
 
 export default function App() {
   return (
