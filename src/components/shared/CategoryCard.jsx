@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 export default function CategoryCard({ category }) {
   return (
     <Link
-      to={`/products?category=${category.slug}`}
+      to={`/products?category=${category.id}`}
       className="block overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)] shadow-sm transition hover:-translate-y-1 hover:shadow-soft"
     >
       <img

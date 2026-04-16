@@ -5,99 +5,104 @@ import CategoryBar from "../components/layout/CategoryBar";
 import Footer from "../components/layout/Footer";
 import ProductCard from "../components/shared/ProductCard";
 import SectionTitle from "../components/shared/SectionTitle";
-import { categories} from "../data/mockData";
-import { products } from "../data/mockData"; 
+import { products as mockProducts } from "../data/mockData";
+
+const BASE_URL = import.meta.env.VITE_APP_API_BASE_URL || "http://127.0.0.1:8000";
+
+const ALL = "all";
+
 export default function Products() {
   const { search } = useLocation();
   const navigate = useNavigate();
 
+  // Derive filter values directly from the URL — no mirroring into state
   const params = new URLSearchParams(search);
+  const selectedCategory = params.get("category") || ALL;
+  const query = params.get("search") || "";
+  const minPrice = params.get("min") || "";
+  const maxPrice = params.get("max") || "";
 
-  const selectedCategoryFromURL = params.get("category") || "all";
-  const queryFromURL = params.get("search") || "";
-  const minFromURL = params.get("min") || "";
-  const maxFromURL = params.get("max") || "";
+  // Update a single filter in the URL from an event handler
+  const setFilter = (key, value) => {
+    const next = new URLSearchParams(search);
+    if (value && value !== ALL) next.set(key, value);
+    else next.delete(key);
+    navigate(`/products?${next.toString()}`, { replace: true });
+  };
 
-  const [selectedCategory, setSelectedCategory] = useState(selectedCategoryFromURL);
-  const [query, setQuery] = useState(queryFromURL);
-  const [minPrice, setMinPrice] = useState(minFromURL);
-  const [maxPrice, setMaxPrice] = useState(maxFromURL);
+  const resetFilters = () => navigate("/products", { replace: true });
 
-  // Sync state when URL changes (back/forward support)
+  const [productsData, setProductsData] = useState([]);
+  const [apiCategories, setApiCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const params = new URLSearchParams(search);
+    const controller = new AbortController();
 
-    setSelectedCategory(params.get("category") || "all");
-    setQuery(params.get("search") || "");
-    setMinPrice(params.get("min") || "");
-    setMaxPrice(params.get("max") || "");
-  }, [search]);
-    const [productsData, setProductsData] = useState([]);
-    const [loading, setLoading] = useState(true);
-    useEffect(() => {
-  fetch("http://localhost/api/products.php")
-    .then((res) => res.json())
-    .then((data) => {
-      setProductsData(data);
-      setLoading(false);
-    })
-    .catch(() => {
-      console.log("API error → using mock data");
-      setProductsData(products); // fallback
-      setLoading(false);
-    });
-}, []);
-  // Update URL when filters change (with safety check)
-  useEffect(() => {
-    const newParams = new URLSearchParams();
+    // Fetch products and store-categories in parallel
+    Promise.all([
+      fetch(`${BASE_URL}/api/customer/products`, { signal: controller.signal }).then((r) => r.json()),
+      fetch(`${BASE_URL}/api/customer/store-categories`, { signal: controller.signal }).then((r) => r.json()),
+    ])
+      .then(([prodData, catData]) => {
+        const apiProducts = prodData.data?.data || prodData.data || [];
+        setProductsData(apiProducts.length > 0 ? apiProducts : mockProducts);
 
-    if (selectedCategory !== "all") {
-      newParams.set("category", selectedCategory);
-    }
+        const cats = catData.data || [];
+        setApiCategories(cats);
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          setProductsData(mockProducts);
+          setLoading(false);
+        }
+      });
 
-    if (query) {
-      newParams.set("search", query);
-    }
+    return () => controller.abort();
+  }, []);
 
-    if (minPrice) {
-      newParams.set("min", minPrice);
-    }
-
-    if (maxPrice) {
-      newParams.set("max", maxPrice);
-    }
-
-    const newSearch = newParams.toString();
-    const currentSearch = search.startsWith("?") ? search.slice(1) : search;
-
-    if (newSearch !== currentSearch) {
-      navigate(`/products?${newSearch}`, { replace: true });
-    }
-  }, [selectedCategory, query, minPrice, maxPrice, search, navigate]);
+  // Build the category list: "All" + API store-categories
+  const categoryList = useMemo(() => {
+    return [
+      { id: ALL, name: "All Categories", slug: ALL },
+      ...apiCategories.map((c) => ({ id: String(c.id), name: c.name, slug: c.slug })),
+    ];
+  }, [apiCategories]);
 
   const filteredProducts = useMemo(() => {
-        if (loading) {
-      return <div className="p-10 text-center">Loading...</div>;
-    }
     return productsData.filter((product) => {
       const matchCategory =
-        selectedCategory === "all" || product.category === selectedCategory;
+        selectedCategory === ALL ||
+        // API products: match by store's category_id
+        String(product.store?.category_id) === selectedCategory ||
+        // Mock products: match by category slug on the product itself
+        product.category === selectedCategory;
 
       const term = query.toLowerCase().trim();
+      const vendorName = product.vendor || product.store?.name || "";
       const matchQuery =
         !term ||
         product.name.toLowerCase().includes(term) ||
-        product.vendor.toLowerCase().includes(term);
+        vendorName.toLowerCase().includes(term);
 
-      const matchMinPrice =
-        !minPrice || product.price >= Number(minPrice);
-
-      const matchMaxPrice =
-        !maxPrice || product.price <= Number(maxPrice);
+      const matchMinPrice = !minPrice || product.price >= Number(minPrice);
+      const matchMaxPrice = !maxPrice || product.price <= Number(maxPrice);
 
       return matchCategory && matchQuery && matchMinPrice && matchMaxPrice;
     });
-  }, [selectedCategory, query, minPrice, maxPrice]);
+  }, [productsData, selectedCategory, query, minPrice, maxPrice]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+        <Navbar />
+        <CategoryBar />
+        <div className="p-10 text-center">Loading...</div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
@@ -123,7 +128,7 @@ export default function Products() {
               </span>
               <input
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => setFilter("search", e.target.value)}
                 placeholder="Search by product or vendor"
                 className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 outline-none"
               />
@@ -136,7 +141,7 @@ export default function Products() {
                 min="0"
                 placeholder="Min"
                 value={minPrice}
-                onChange={(e) => setMinPrice(e.target.value)}
+                onChange={(e) => setFilter("min", e.target.value)}
                 className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-2 outline-none"
               />
 
@@ -145,7 +150,7 @@ export default function Products() {
                 min="0"
                 placeholder="Max"
                 value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
+                onChange={(e) => setFilter("max", e.target.value)}
                 className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-2 outline-none"
               />
             </div>
@@ -157,12 +162,12 @@ export default function Products() {
               </span>
 
               <div className="space-y-2">
-                {categories.map((category) => (
+                {categoryList.map((category) => (
                   <button
-                    key={category.slug}
-                    onClick={() => setSelectedCategory(category.slug)}
+                    key={category.id}
+                    onClick={() => setFilter("category", category.id)}
                     className={`w-full rounded-2xl px-4 py-3 text-left text-sm font-semibold transition ${
-                      selectedCategory === category.slug
+                      selectedCategory === category.id
                         ? "bg-orange-500 text-white"
                         : "border border-[var(--border)] bg-[var(--bg)] hover:border-orange-300"
                     }`}
@@ -175,12 +180,7 @@ export default function Products() {
 
             {/* Reset */}
             <button
-              onClick={() => {
-                setQuery("");
-                setSelectedCategory("all");
-                setMinPrice("");
-                setMaxPrice("");
-              }}
+              onClick={resetFilters}
               className="mt-6 w-full rounded-2xl bg-gray-200 py-2 font-semibold hover:bg-gray-300"
             >
               Reset Filters

@@ -11,34 +11,40 @@ import ProductCard from "../components/shared/ProductCard";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-import Checkout from "./Checkout";
+const BASE_URL = import.meta.env.VITE_APP_API_BASE_URL || "http://127.0.0.1:8000";
 
 export default function Home() {
   const [homeData, setHomeData] = useState(null);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/customer/home")
+    const controller = new AbortController();
+    fetch(`${BASE_URL}/api/customer/home`, { signal: controller.signal })
       .then((res) => res.json())
       .then((data) => {
         setHomeData(data);
         setLoading(false);
       })
       .catch((err) => {
-        console.log("API error", err);
-        setLoading(false);
+        if (err.name !== "AbortError") setLoading(false);
       });
+    return () => controller.abort();
   }, []);
 
   if (loading) {
     return <div className="p-10 text-center">Loading...</div>;
   }
   if (!homeData) {
-    return <div>No data</div>;
+    return <div className="p-10 text-center">Failed to load data.</div>;
   }
 
-  // if (homeData) {
-  //   return <pre>{JSON.stringify(homeData)}</pre>;
-  // }
+  const sections = homeData.data || [];
+  const getSection = (type) => sections.find((s) => s.type === type);
+
+  const vendors = getSection("stores")?.data?.stores || [];
+  const categories = getSection("categories")?.data?.categories || [];
+  const products = getSection("products")?.data?.products || [];
+  const topSellers = vendors.slice(0, 4);
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition-colors duration-300">
@@ -66,7 +72,7 @@ export default function Home() {
           <SectionTitle title="Popular Categories" to="/products" />
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            {categories.slice(1).map((category) => (
+            {categories.map((category) => (
               <CategoryCard key={category.id} category={category} />
             ))}
           </div>
@@ -93,16 +99,22 @@ export default function Home() {
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {topSellers.map((seller) => (
               <Link
-                to={`/sellers/${seller.id}`}
+                to={`/store/${seller.slug || seller.id}`}
                 key={seller.id}
                 className="flex items-center gap-4 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-soft"
               >
-                <img
-                  src={seller.logo}
-                  alt={seller.name}
-                  className="h-16 w-16 rounded-2xl object-cover"
-                />
-                <h3 className="text-2xl font-bold">{seller.name}</h3>
+                {seller.logo ? (
+                  <img
+                    src={seller.logo}
+                    alt={seller.name}
+                    className="h-16 w-16 rounded-2xl object-cover"
+                  />
+                ) : (
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-100 text-xl font-bold text-orange-600">
+                    {seller.name?.[0]}
+                  </div>
+                )}
+                <h3 className="text-xl font-bold">{seller.name}</h3>
               </Link>
             ))}
           </div>

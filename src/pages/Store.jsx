@@ -1,18 +1,54 @@
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Navbar from "../components/layout/Navbar";
 import CategoryBar from "../components/layout/CategoryBar";
 import Footer from "../components/layout/Footer";
 import ProductCard from "../components/shared/ProductCard";
 
-import { vendors, products } from "../data/mockData";
+const BASE_URL = import.meta.env.VITE_APP_API_BASE_URL || "http://127.0.0.1:8000";
 
 export default function Store() {
   const { id } = useParams();
+  const [store, setStore] = useState(null);
+  const [storeProducts, setStoreProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  const store = vendors.find((v) => v.id === Number(id));
-  const storeProducts = products.filter((p) => p.vendorId === Number(id));
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${BASE_URL}/api/customer/stores/${id}`, { signal: controller.signal })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.success && !data.data) {
+          setNotFound(true);
+        } else {
+          const storeData = data.data || data;
+          setStore(storeData.store || storeData);
+          setStoreProducts(storeData.products || []);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          setNotFound(true);
+          setLoading(false);
+        }
+      });
+    return () => controller.abort();
+  }, [id]);
 
-  if (!store) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+        <Navbar />
+        <CategoryBar />
+        <div className="p-10 text-center">Loading...</div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (notFound || !store) {
     return (
       <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
         <Navbar />
@@ -24,7 +60,6 @@ export default function Store() {
             <p className="mt-3 text-[var(--muted)]">
               The store you are looking for does not exist.
             </p>
-
             <Link
               to="/vendors"
               className="mt-6 inline-block rounded-2xl bg-[var(--nav)] px-6 py-3 font-semibold text-white transition hover:opacity-90"
@@ -55,12 +90,18 @@ export default function Store() {
         </div>
 
         {/* Banner */}
-        <div className="relative mb-10 overflow-hidden rounded-3xl">
-          <img
-            src={store.logo}
-            alt={store.name}
-            className="h-48 w-full object-cover sm:h-56 md:h-64"
-          />
+        <div className="relative mb-10 overflow-hidden rounded-3xl bg-orange-100">
+          {store.logo ? (
+            <img
+              src={store.logo}
+              alt={store.name}
+              className="h-48 w-full object-cover sm:h-56 md:h-64"
+            />
+          ) : (
+            <div className="flex h-48 items-center justify-center sm:h-56 md:h-64">
+              <span className="text-6xl font-extrabold text-orange-400">{store.name?.[0]}</span>
+            </div>
+          )}
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 px-4 text-center">
             <h1 className="text-2xl font-bold text-white sm:text-3xl md:text-4xl">
               {store.name}
@@ -71,7 +112,9 @@ export default function Store() {
         {/* Info */}
         <div className="mb-8 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
           <h2 className="text-2xl font-bold">{store.name}</h2>
-          <p className="mt-2 text-[var(--muted)]">{store.tagline}</p>
+          {store.description && (
+            <p className="mt-2 text-[var(--muted)]">{store.description}</p>
+          )}
         </div>
 
         {/* Products */}

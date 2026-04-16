@@ -1,10 +1,1 @@
-const baseUrl = import.meta.env.VITE_APP_API_BASE_URL
-console.log(baseUrl)
-
-const fetchHome =async () => {
-    const response = await fetch(`${baseUrl}/api/customer/home`)
-    const data = await response.json()
-    console.log(data)
-    return data;
-}
-// fetchHome() 
+export const BASE_URL = import.meta.env.VITE_APP_API_BASE_URL || "http://127.0.0.1:8000";
