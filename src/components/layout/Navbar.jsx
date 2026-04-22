@@ -43,6 +43,14 @@ function AccountIcon() {
   );
 }
 
+function DashboardIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h7v7H3V3Zm0 11h7v7H3v-7Zm11-11h7v7h-7V3Zm0 11h7v7h-7v-7Z" />
+    </svg>
+  );
+}
+
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { itemCount } = useCart();
@@ -59,6 +67,7 @@ export default function Navbar() {
     { label: "Wishlist", to: "/wishlist", icon: <HeartIcon />, badge: 2 },
     { label: "Cart", to: "/cart", icon: <CartIcon />, badge: itemCount },
     { label: "Orders", to: "/orders", icon: <OrdersIcon />, badge: 3 },
+    { label: "Dashboard", to: "/dashboard", icon: <DashboardIcon />, badge: 0 },
     { label: "Account", to: "/account", icon: <AccountIcon />, badge: 0 },
   ];
 

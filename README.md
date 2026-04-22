@@ -14,7 +14,7 @@ npm run preview
 ## Environment
 
 Create a `.env` file in the project root:
-
+    
 ```env
 VITE_APP_API_BASE_URL=http://localhost:8000
 ```
