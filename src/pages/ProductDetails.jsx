@@ -1,6 +1,5 @@
 import { Link, useParams } from "react-router-dom";
 import Navbar from "../components/layout/Navbar";
-import CategoryBar from "../components/layout/CategoryBar";
 import Footer from "../components/layout/Footer";
 import { products } from "../data/mockData";
 import { formatCurrency } from "../utils/formatCurrency";
@@ -24,7 +23,6 @@ export default function ProductDetails() {
     return (
       <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
         <Navbar />
-        <CategoryBar />
 
         <main className="mx-auto max-w-4xl px-4 py-16 text-center">
           <h1 className="text-3xl font-extrabold">Product not found</h1>

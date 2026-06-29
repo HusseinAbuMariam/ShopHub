@@ -1,5 +1,4 @@
 import Navbar from "../components/layout/Navbar";
-import CategoryBar from "../components/layout/CategoryBar";
 import Footer from "../components/layout/Footer";
 
 export default function FAQ() {
@@ -12,7 +11,6 @@ export default function FAQ() {
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <Navbar />
-      <CategoryBar />
       <main className="mx-auto max-w-5xl px-4 py-8 lg:px-8">
         <h1 className="mb-6 text-3xl font-extrabold">Frequently Asked Questions</h1>
         <div className="space-y-4">

@@ -1,19 +1,19 @@
 import { Link } from "react-router-dom";
 
-export default function SectionTitle({
-  title,
-  action = "View All",
-  to = "/products",
-}) {
+export default function SectionTitle({ title, action = "View All", to = "/products", icon = "⚡" }) {
   return (
-    <div className="mb-6 flex items-center justify-between">
-      <h2 className="text-2xl font-extrabold tracking-tight">{title}</h2>
-
+    <div className="mb-5 flex items-center justify-between">
+      <div>
+        <h2 className="flex items-center gap-2 text-xl font-extrabold text-[var(--text)]">
+          <span>{icon}</span>
+          {title}
+        </h2>
+      </div>
       <Link
         to={to}
-        className="px-6 py-2 rounded-full bg-[var(--primary)] text-white dark:bg-white dark:text-black font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300"
+        className="flex items-center gap-1 text-sm font-semibold text-violet-600 transition hover:text-violet-700"
       >
-        {action}
+        {action} →
       </Link>
     </div>
   );

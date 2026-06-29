@@ -3,15 +3,7 @@ import { createContext, useContext, useMemo, useState } from "react";
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
-  const [items, setItems] = useState([
-    {
-      id: 3,
-      name: "Wireless Headphones",
-      price: 79,
-      quantity: 1,
-      image: "/assets/headphones.svg",
-    },
-  ]);
+  const [items, setItems] = useState([]);
 
   const getStoredUser = () => {
     try {
@@ -23,11 +15,18 @@ export function CartProvider({ children }) {
   };
 
   const [isLoggedIn, setIsLoggedIn] = useState(!!getStoredUser());
+  const [currentUser, setCurrentUser] = useState(getStoredUser());
+
+  const login = (userData) => {
+    localStorage.setItem("user", JSON.stringify(userData));
+    setCurrentUser(userData);
+    setIsLoggedIn(true);
+  };
 
   const addToCart = (product) => {
+    if (!isLoggedIn) return;
     setItems((prev) => {
       const existing = prev.find((item) => item.id === product.id);
-
       if (existing) {
         return prev.map((item) =>
           item.id === product.id
@@ -35,7 +34,6 @@ export function CartProvider({ children }) {
             : item
         );
       }
-
       return [...prev, { ...product, quantity: 1 }];
     });
   };
@@ -45,7 +43,6 @@ export function CartProvider({ children }) {
 
   const updateQuantity = (id, nextQuantity) => {
     if (nextQuantity <= 0) return removeFromCart(id);
-
     setItems((prev) =>
       prev.map((item) =>
         item.id === id ? { ...item, quantity: nextQuantity } : item
@@ -58,6 +55,7 @@ export function CartProvider({ children }) {
   const logout = () => {
     localStorage.removeItem("user");
     setIsLoggedIn(false);
+    setCurrentUser(null);
     clearCart();
   };
 
@@ -78,9 +76,11 @@ export function CartProvider({ children }) {
       subtotal,
       isLoggedIn,
       setIsLoggedIn,
+      currentUser,
+      login,
       logout,
     }),
-    [items, itemCount, subtotal, isLoggedIn]
+    [items, itemCount, subtotal, isLoggedIn, currentUser]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

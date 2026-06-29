@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Navbar from "../components/layout/Navbar";
-import CategoryBar from "../components/layout/CategoryBar";
 import Footer from "../components/layout/Footer";
 import ProductCard from "../components/shared/ProductCard";
 
@@ -13,6 +12,7 @@ export default function Store() {
   const [storeProducts, setStoreProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [activeTab, setActiveTab] = useState("products");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -23,26 +23,24 @@ export default function Store() {
           setNotFound(true);
         } else {
           const storeData = data.data || data;
-          setStore(storeData.store || storeData);
+          setStore(storeData);
           setStoreProducts(storeData.products || []);
         }
         setLoading(false);
       })
       .catch((err) => {
-        if (err.name !== "AbortError") {
-          setNotFound(true);
-          setLoading(false);
-        }
+        if (err.name !== "AbortError") { setNotFound(true); setLoading(false); }
       });
     return () => controller.abort();
   }, [id]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+      <div className="min-h-screen bg-[var(--bg)]">
         <Navbar />
-        <CategoryBar />
-        <div className="p-10 text-center">Loading...</div>
+        <div className="flex h-96 items-center justify-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-200 border-t-violet-600" />
+        </div>
         <Footer />
       </div>
     );
@@ -52,92 +50,158 @@ export default function Store() {
     return (
       <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
         <Navbar />
-        <CategoryBar />
-
         <main className="mx-auto max-w-7xl px-4 py-16 text-center lg:px-8">
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-10 shadow-sm">
-            <h1 className="text-3xl font-extrabold">Store not found</h1>
-            <p className="mt-3 text-[var(--muted)]">
-              The store you are looking for does not exist.
-            </p>
-            <Link
-              to="/vendors"
-              className="mt-6 inline-block rounded-2xl bg-[var(--nav)] px-6 py-3 font-semibold text-white transition hover:opacity-90"
-            >
-              Back to Vendors
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-12 shadow-sm">
+            <span className="text-6xl">🏪</span>
+            <h1 className="mt-4 text-3xl font-extrabold">Store not found</h1>
+            <p className="mt-2 text-[var(--muted)]">The store you're looking for doesn't exist.</p>
+            <Link to="/vendors" className="mt-6 inline-block rounded-xl bg-violet-600 px-6 py-3 font-semibold text-white transition hover:bg-violet-700">
+              Browse Stores
             </Link>
           </div>
         </main>
-
         <Footer />
       </div>
     );
   }
 
+  const ratingValue = store.rating?.value || store.rating || "N/A";
+
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <Navbar />
-      <CategoryBar />
 
-      <main className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
-        <div className="mb-6">
-          <Link
-            to="/vendors"
-            className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm font-semibold transition hover:-translate-y-0.5 hover:shadow-sm"
-          >
-            ← Back to Vendors
-          </Link>
-        </div>
+      <main className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
+
+        {/* Back */}
+        <Link to="/vendors" className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-[var(--muted)] transition hover:text-violet-600">
+          ← Back to Stores
+        </Link>
 
         {/* Banner */}
-        <div className="relative mb-10 overflow-hidden rounded-3xl bg-orange-100">
-          {store.logo ? (
-            <img
-              src={store.logo}
-              alt={store.name}
-              className="h-48 w-full object-cover sm:h-56 md:h-64"
-            />
+        <div className="relative mb-6 overflow-hidden rounded-2xl">
+          {store.cover || store.logo ? (
+            <img src={store.cover || store.logo} alt={store.name} className="h-52 w-full object-cover md:h-64" />
           ) : (
-            <div className="flex h-48 items-center justify-center sm:h-56 md:h-64">
-              <span className="text-6xl font-extrabold text-orange-400">{store.name?.[0]}</span>
+            <div className="flex h-52 w-full items-center justify-center bg-gradient-to-br from-violet-100 to-indigo-100 md:h-64">
+              <span className="text-8xl font-extrabold text-violet-300">{store.name?.[0]}</span>
             </div>
           )}
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 px-4 text-center">
-            <h1 className="text-2xl font-bold text-white sm:text-3xl md:text-4xl">
-              {store.name}
-            </h1>
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         </div>
 
-        {/* Info */}
-        <div className="mb-8 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
-          <h2 className="text-2xl font-bold">{store.name}</h2>
-          {store.description && (
-            <p className="mt-2 text-[var(--muted)]">{store.description}</p>
-          )}
-        </div>
-
-        {/* Products */}
-        <div>
-          <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <h3 className="text-2xl font-bold">Products</h3>
-            <span className="text-sm font-medium text-[var(--muted)]">
-              {storeProducts.length} product{storeProducts.length !== 1 ? "s" : ""}
-            </span>
+        {/* Store info card */}
+        <div className="mb-8 flex flex-col gap-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm sm:flex-row sm:items-center">
+          {/* Logo */}
+          <div className="shrink-0">
+            {store.logo ? (
+              <img src={store.logo} alt={store.name} className="h-20 w-20 rounded-2xl object-cover ring-4 ring-violet-100 shadow-lg" />
+            ) : (
+              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-violet-100 text-3xl font-extrabold text-violet-600 ring-4 ring-violet-50 shadow-lg">
+                {store.name?.[0]}
+              </div>
+            )}
           </div>
 
-          {storeProducts.length > 0 ? (
-            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-              {storeProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+          {/* Info */}
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl font-extrabold">{store.name}</h1>
+            {store.description && (
+              <p className="mt-1 line-clamp-2 text-sm text-[var(--muted)]">{store.description}</p>
+            )}
+            <div className="mt-3 flex flex-wrap gap-4 text-sm text-[var(--muted)]">
+              <span className="flex items-center gap-1">
+                📦 <strong className="text-[var(--text)]">{storeProducts.length}</strong> Products
+              </span>
+              {store.rating && (
+                <span className="flex items-center gap-1">
+                  ⭐ <strong className="text-[var(--text)]">{ratingValue}</strong> Rating
+                </span>
+              )}
+              {store.created_at && (
+                <span className="flex items-center gap-1">
+                  📅 Since <strong className="text-[var(--text)]">{new Date(store.created_at).getFullYear()}</strong>
+                </span>
+              )}
+              {store.category?.name && (
+                <span className="flex items-center gap-1">
+                  🗂️ <strong className="text-[var(--text)]">{store.category.name}</strong>
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        {/* Tabs */}
+        <div className="mb-6 flex w-fit gap-1 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-1 shadow-sm">
+          {["products", "about"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`rounded-xl px-5 py-2 text-sm font-semibold capitalize transition ${
+                activeTab === tab ? "bg-violet-600 text-white shadow-sm" : "text-[var(--muted)] hover:text-violet-600"
+              }`}
+            >
+              {tab === "products" ? `🛍️ Products (${storeProducts.length})` : "ℹ️ About"}
+            </button>
+          ))}
+        </div>
+
+        {/* Products tab */}
+        {activeTab === "products" && (
+          <div>
+            {storeProducts.length > 0 ? (
+              <>
+                <div className="mb-4 flex items-center justify-between">
+                  <p className="text-sm text-[var(--muted)]">{storeProducts.length} products available</p>
+                  <select className="rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-violet-500">
+                    <option>Sort: Default</option>
+                    <option>Price: Low to High</option>
+                    <option>Price: High to Low</option>
+                    <option>Newest First</option>
+                  </select>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+                  {storeProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-12 text-center shadow-sm">
+                <span className="text-5xl">📭</span>
+                <p className="mt-4 font-semibold text-[var(--text)]">No products yet</p>
+                <p className="mt-1 text-sm text-[var(--muted)]">This store hasn't added any products yet.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* About tab */}
+        {activeTab === "about" && (
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-bold">About {store.name}</h2>
+            {store.description ? (
+              <p className="text-sm leading-7 text-[var(--muted)]">{store.description}</p>
+            ) : (
+              <p className="text-sm text-[var(--muted)]">No description available.</p>
+            )}
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              {[
+                { label: "Store Name", value: store.name },
+                { label: "Category", value: store.category?.name || "General" },
+                { label: "Member Since", value: store.created_at ? new Date(store.created_at).toLocaleDateString() : "N/A" },
+                { label: "Email", value: store.email || "N/A" },
+                { label: "Phone", value: store.phone || "N/A" },
+                { label: "Address", value: store.address || "N/A" },
+              ].map((info) => (
+                <div key={info.label} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+                  <p className="text-xs text-[var(--muted)]">{info.label}</p>
+                  <p className="mt-1 font-semibold text-[var(--text)]">{info.value}</p>
+                </div>
               ))}
             </div>
-          ) : (
-            <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-8 text-center shadow-sm">
-              <p className="text-[var(--muted)]">No products available</p>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </main>
 
       <Footer />

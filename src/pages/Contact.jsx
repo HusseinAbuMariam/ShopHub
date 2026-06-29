@@ -1,12 +1,10 @@
 import Navbar from "../components/layout/Navbar";
-import CategoryBar from "../components/layout/CategoryBar";
 import Footer from "../components/layout/Footer";
 
 export default function Contact() {
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <Navbar />
-      <CategoryBar />
       <main className="mx-auto max-w-5xl px-4 py-8 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-2">
           <section className="rounded-[2rem] border border-[var(--border)] bg-[var(--card)] p-8 shadow-sm">

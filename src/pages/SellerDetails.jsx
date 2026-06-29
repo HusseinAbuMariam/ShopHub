@@ -2,7 +2,6 @@ import { useParams } from "react-router-dom";
 import { topSellers, products } from "../data/mockData";
 import ProductCard from "../components/shared/ProductCard";
 import Navbar from "../components/layout/Navbar";
-import CategoryBar from "../components/layout/CategoryBar";
 import Footer from "../components/layout/Footer";
 
 export default function SellerDetails() {
@@ -27,7 +26,6 @@ export default function SellerDetails() {
 
       {/* NAV */}
       <Navbar />
-      <CategoryBar />
 
       <main className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
 
